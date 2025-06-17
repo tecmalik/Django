@@ -24,7 +24,7 @@ class Book(models.Model):
     summary = models.TextField()
     isbn = models.CharField(max_length=11,unique=True)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-    language = models.ForeignKey('Language', on_delete=models.CASCADE)
+    language = models.ForeignKey('Language', on_delete=models.CASCADE, default=1)
     author = models.ManyToManyField(Author,related_name="books")
 
 
