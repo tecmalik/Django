@@ -56,14 +56,6 @@ class Category(models.Model):
     def __str__(self):
         return self.title
 
-class Author(models.Model):
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
-    email = models.DateField()
-    dob = models.DateField()
-    dod = models.DateField()
-
-
 class BookInstance(models.Model):
     LOAN_STATUS = (
     ('A', "AVAILABLE"),

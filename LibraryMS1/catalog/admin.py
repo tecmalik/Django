@@ -12,12 +12,6 @@ class BookAdmin(admin.ModelAdmin):
     search_fields = ['title']
     list_per_page = 10
 
-
-@admin.register(models.Author)
-class AuthorAdmin(admin.ModelAdmin):
-    list_display = ['first_name', 'last_name']
-    search_fields = ['first_name', 'last_name']
-
 @admin.register(models.Genre)
 class GenreAdmin(admin.ModelAdmin):
     list_display = ['name']
