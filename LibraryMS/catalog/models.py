@@ -3,7 +3,7 @@ import uuid
 from django.db import models
 from django.conf import settings
 
-from user.models import Author
+from django.contrib.auth.models import User
 
 
 class Genre(models.Model):
@@ -25,7 +25,7 @@ class Book(models.Model):
     isbn = models.CharField(max_length=11,unique=True)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     language = models.ForeignKey('Language', on_delete=models.CASCADE, default=1)
-    author = models.ManyToManyField(Author,related_name="books")
+    author = models.ManyToManyField('Author',related_name="books")
 
 
     def __str__(self):
@@ -60,9 +60,11 @@ class Author(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email = models.DateField()
-    dob = models.DateField()
-    dod = models.DateField()
+    dob = models.DateField(blank=False, null=False)
+    dod = models.DateField(blank=True, null=True)
 
+    def __str__(self):
+        return self.first_name + " " + self.last_name
 
 class BookInstance(models.Model):
     LOAN_STATUS = (
@@ -71,12 +73,16 @@ class BookInstance(models.Model):
     ('M', "MAINTENANCE"),
     )
 
-    def __str__(self):
-        return self.title
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True )
-    books = models.ForeignKey(Book, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
     status = models.CharField(max_length=1, choices=LOAN_STATUS, default="A" , unique=True)
     return_date = models.DateField(blank=False, null=False)
     comments = models.TextField(blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+class BookImage(models.Model):
+    image = models.ImageField(upload_to="book/images", blank=True)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="images")
+
+    def __str__(self):
+        return self.image.url

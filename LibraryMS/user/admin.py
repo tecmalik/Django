@@ -21,7 +21,7 @@ class UserAdmin(BaseUserAdmin):
     )
     list_display = ['first_name', 'last_name', 'email','phone']
     list_display_links = [ 'email']
-    list_editable = ['first_name', 'last_name', 'phone']
+
     list_per_page = 10
 
 
