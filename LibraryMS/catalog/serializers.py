@@ -1,4 +1,4 @@
-from catalog.models import Book, BookImage
+from catalog.models import Book, BookImage, BookInstance
 from rest_framework import serializers
 
 from catalog.models import Book , Author
@@ -31,6 +31,18 @@ class AddBookSerializer(serializers.ModelSerializer):
 
 
 class BookImageSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        book_id = self.context['book_id']
+        return BookImage.objects.create(book_id=book_id, **validated_data)
+
     class Meta:
         model = BookImage
         fields = ['id', 'image']
+
+class BookInstanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookInstance
+        fields = ['return_date','comments']
+
+
+# ///nb djoser google search for jwt

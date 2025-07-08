@@ -1,17 +1,22 @@
+import smtplib
 from gc import get_objects
 from operator import index
 
+from django.conf import settings
+from django.core.mail import send_mail
 from django.core.validators import get_available_image_extensions
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from rest_framework import status, viewsets, serializers
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from .models import Book, Author, BookImage
-from .serializers import BookSerializer, AuthorSerializer, AddBookSerializer, BookImageSerializer
+from .models import Book, Author, BookImage, BookInstance
+from .serializers import BookSerializer, AuthorSerializer, AddBookSerializer, BookImageSerializer, \
+    BookInstanceSerializer
 
 
 # Create your views here.
@@ -51,7 +56,7 @@ from .serializers import BookSerializer, AuthorSerializer, AddBookSerializer, Bo
 #     author.delete()
 #     return Response(author.data, status=status.HTTP_204_NO_CONTENT)
 
-
+# or all of that up there.
 class AddAuthorView(ListCreateAPIView):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
@@ -95,6 +100,49 @@ class BookImageViewSet(viewsets.ModelViewSet):
     queryset = BookImage.objects.all()
     serializer_class = BookImageSerializer
 
+    def perform_create(self, serializer):
+        # print("KWARGS IN PERFORM_CREATE:",self.kwargs)
+        book_id = serializer.data['book_pk']
+        if not book_id:
+            raise ValueError("Book_id missing in kwargs!")
+        serializer.save(book_id=book_id)
+
+
+@permission_classes(IsAuthenticated)
+@api_view(['POST'])
+def borrow_book(request, pk):
+    # Book.objects.filter(pk=pk) #or use the method from django shortcut
+    book = get_object_or_404(Book, pk=pk)
+    user = request.user
+    data = BookInstanceSerializer(data=request.data)
+    data.is_valid(raise_exception=True)
+    BookInstance.objects.create(
+        user = user,
+        book=book,
+        comments = data.validated_data['comments'],
+        return_date = data.validated_data['return_date']
+    )
+    # book_instance = BookInstance()
+    # book_instance.user = user
+    # book_instance.book = book
+    # book_instance.return_date = data.validated_data['return_date']
+    # book_instance.comments = data.validated_data['comments']
+    # book_instance.save()
+    subject = "Notification from library MS"
+    message = "Your book has been borrowed successfully"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    recipient_list = [user.email]
+    try :
+        send_mail(subject,
+                  message,
+                  from_email,
+                  recipient_list=recipient_list,)
+    except smtplib.SMTPAuthenticationError as e:
+        return Response({"message": f'{e}'} ,status=status.HTTP_406_NOT_ACCEPTABLE)
+    return Response({"message": "book borrowed successfully"},status=status.HTTP_200_OK)
+
+
 class GetUpdateDeleteAuthorView(RetrieveUpdateDestroyAPIView):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
+

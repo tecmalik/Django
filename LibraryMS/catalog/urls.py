@@ -4,12 +4,19 @@ from rest_framework import routers
 from . import views
 from .views import BookViewSet, BookImageViewSet
 
-router = routers.DefaultRouter()
-router.register('books', BookViewSet, basename='books')
+from rest_framework_nested import routers
 
+router = routers.DefaultRouter()
+
+# from google search drf nested router
+router.register('books', BookViewSet, basename='books')
 
 router.register('images', BookImageViewSet, basename='book-images')
 print(router.urls)
+
+book_images_router = routers.NestedDefaultRouter(router, 'books', lookup='book')
+
+book_images_router.register('images', BookImageViewSet, basename='book-images')
 
 urlpatterns = [
 
@@ -25,5 +32,7 @@ urlpatterns = [
     path("images/<int:pk>/", views.image_details, name="details-image"),
 
     path ("greet/<name>",views.greet),
+
+    path("borrow-books/<int:pk>/", views.borrow_book, name="details-book"),
 ]
 
